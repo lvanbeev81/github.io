@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Golf Scorecard Tracker</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lato:wght@400;700&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: #f4f7f4;
+            color: #2c2c2c;
+        }
+
+        #header {
+            background-color: #1a3a2a;
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        #header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+        }
+
+        #header p {
+            color: #d4edda;
+            font-size: 1rem;
+        }
+
+        #header a {
+            color: #d4edda;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        #header a:hover { color: white; }
+
+        #controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 24px;
+            background-color: #2d6a4f;
+            flex-wrap: wrap;
+        }
+
+        #controls label {
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        #controls select, #controls input {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: none;
+            font-family: 'Lato', sans-serif;
+            font-size: 1rem;
+        }
+
+        #controls button {
+            padding: 8px 20px;
+            background-color: #1a3a2a;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Lato', sans-serif;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        #controls button:hover { background-color: #0f2219; }
+
+        #scorecard-wrapper {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        thead tr {
+            background-color: #1a3a2a;
+            color: white;
+        }
+
+        thead th {
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+        }
+
+        tbody td {
+            padding: 10px 8px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.95rem;
+        }
+
+        tbody tr:last-child td { border-bottom: none; }
+
+        tbody tr.totals-row {
+            background-color: #f0f4f0;
+            font-weight: 700;
+        }
+
+        input[type="number"] {
+            width: 55px;
+            padding: 6px;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            font-family: 'Lato', sans-serif;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #2d6a4f;
+        }
+
+        /* Score color coding */
+        .eagle    { background-color: #ffd700; font-weight: 700; border-radius: 50%; display: inline-block; width: 36px; height: 36px; line-height: 36px; }
+        .birdie   { background-color: #ff6b6b; color: white; font-weight: 700; border-radius: 50%; display: inline-block; width: 36px; height: 36px; line-height: 36px; }
+        .par      { background-color: #d4edda; font-weight: 700; border-radius: 4px; display: inline-block; width: 36px; height: 36px; line-height: 36px; }
+        .bogey    { background-color: #fff3cd; font-weight: 700; border-radius: 4px; display: inline-block; width: 36px; height: 36px; line-height: 36px; }
+        .double   { background-color: #f8d7da; font-weight: 700; border-radius: 4px; display: inline-block; width: 36px; height: 36px; line-height: 36px; }
+        .worse    { background-color: #d9534f; color: white; font-weight: 700; border-radius: 4px; display: inline-block; width: 36px; height: 36px; line-height: 36px; }
+
+        #summary {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .summary-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 24px 40px;
+            text-align: center;
+            min-width: 160px;
+        }
+
+        .summary-card .label {
+            font-size: 0.85rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 8px;
+        }
+
+        .summary-card .value {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            color: #1a3a2a;
+        }
+
+        .summary-card .value.under { color: #2d6a4f; }
+        .summary-card .value.over  { color: #d9534f; }
+        .summary-card .value.even  { color: #1a3a2a; }
+
+        #legend {
+            max-width: 1000px;
+            margin: 10px auto 40px;
+            padding: 0 20px;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+            font-size: 0.85rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .legend-square {
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        #footer {
+            background-color: #1a3a2a;
+            color: #d4edda;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+
+        #footer a { color: #d4edda; text-decoration: none; }
+        #footer a:hover { color: white; }
+    </style>
+</head>
+<body>
+
+    <div id="header">
+        <h1>⛳ Golf Scorecard Tracker</h1>
+        <p>Track your round hole by hole and see your score in real time.</p>
+        <a href="golf.html">← Back to Golf Page</a>
+    </div>
+
+    <div id="controls">
+        <label for="hole-count">Round:</label>
+        <select id="hole-count" onchange="buildCard()">
+            <option value="9">9 Holes</option>
+            <option value="18" selected>18 Holes</option>
+        </select>
+
+        <label for="player-name">Player:</label>
+        <input type="text" id="player-name" placeholder="Your name" value="Luke" />
+
+        <button onclick="resetCard()">Reset</button>
+    </div>
+
+    <div id="scorecard-wrapper">
+        <table id="scorecard">
+            <!-- Built by JS -->
+        </table>
+    </div>
+
+    <div id="summary">
+        <div class="summary-card">
+            <div class="label">Total Score</div>
+            <div class="value" id="total-score">—</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">Total Par</div>
+            <div class="value" id="total-par">—</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">+/- Par</div>
+            <div class="value" id="vs-par">—</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">Holes Played</div>
+            <div class="value" id="holes-played">0</div>
+        </div>
+    </div>
+
+    <div id="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:#ffd700"></span> Eagle or better</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#ff6b6b"></span> Birdie</div>
+        <div class="legend-item"><span class="legend-square" style="background:#d4edda"></span> Par</div>
+        <div class="legend-item"><span class="legend-square" style="background:#fff3cd"></span> Bogey</div>
+        <div class="legend-item"><span class="legend-square" style="background:#f8d7da"></span> Double Bogey</div>
+        <div class="legend-item"><span class="legend-square" style="background:#d9534f"></span> Triple+</div>
+    </div>
+
+    <div id="footer">
+        <p>&copy; Luke van Beever 2025 &nbsp;|&nbsp; <a href="golf.html">Back to Golf Page</a></p>
+    </div>
+
+    <script>
+        const defaultPars = [4,4,3,4,5,3,4,5,4, 4,3,5,4,4,3,5,4,4];
+
+        function buildCard() {
+            const holes = parseInt(document.getElementById('hole-count').value);
+            const table = document.getElementById('scorecard');
+            table.innerHTML = '';
+
+            function buildHalf(start, end, label) {
+                let headerHTML = `<thead><tr><th>${label}</th>`;
+                for (let i = start; i <= end; i++) headerHTML += `<th>${i}</th>`;
+                headerHTML += '<th>Total</th></tr></thead>';
+
+                let parHTML = '<tr><td><strong>Par</strong></td>';
+                let scoreHTML = '<tr><td><strong>Score</strong></td>';
+
+                for (let i = start; i <= end; i++) {
+                    parHTML += `<td><input type="number" id="par-${i}" min="3" max="6" value="${defaultPars[i-1]}" onchange="calculate()" /></td>`;
+                    scoreHTML += `<td><input type="number" id="score-${i}" min="1" max="15" placeholder="—" onchange="calculate()" /></td>`;
+                }
+
+                parHTML += `<td id="par-total-${label}">—</td></tr>`;
+                scoreHTML += `<td id="score-total-${label}">—</td></tr>`;
+
+                let resultHTML = '<tr class="totals-row"><td><strong>+/- Par</strong></td>';
+                for (let i = start; i <= end; i++) {
+                    resultHTML += `<td id="result-${i}">—</td>`;
+                }
+                resultHTML += `<td id="result-total-${label}">—</td></tr>`;
+
+                return `<table style="margin-bottom: 30px;">${headerHTML}<tbody>${parHTML}${scoreHTML}${resultHTML}</tbody></table>`;
+             }
+
+            const front = 9;
+            const holes18 = holes === 18;
+
+            let html = buildHalf(1, front, 'Front 9');
+            if (holes18) html += buildHalf(10, 18, 'Back 9');
+
+            table.innerHTML = html;
+            calculate();
+        }
+
+        function calculate() {
+            const holes = parseInt(document.getElementById('hole-count').value);
+
+            let totalScore = 0, totalPar = 0, holesPlayed = 0;
+            let frontScore = 0, frontPar = 0, frontPlayed = 0;
+            let backScore = 0, backPar = 0, backPlayed = 0;
+
+            for (let i = 1; i <= holes; i++) {
+                const parEl = document.getElementById(`par-${i}`);
+                const scoreEl = document.getElementById(`score-${i}`);
+                if (!parEl || !scoreEl) continue;
+
+                const par = parseInt(parEl.value) || 0;
+                const scoreInput = scoreEl.value;
+                const score = scoreInput !== '' ? parseInt(scoreInput) : null;
+                const diff = score !== null ? score - par : null;
+                const cell = document.getElementById(`result-${i}`);
+
+                // Per-hole color coding
+                if (score !== null) {
+                    let cls;
+                    if (diff <= -2)      cls = 'eagle';
+                    else if (diff === -1) cls = 'birdie';
+                    else if (diff === 0)  cls = 'par';
+                    else if (diff === 1)  cls = 'bogey';
+                    else if (diff === 2)  cls = 'double';
+                    else                  cls = 'worse';
+                    cell.innerHTML = `<span class="${cls}">${score}</span>`;
+                } else {
+                    cell.innerHTML = '—';
+                }
+
+                // Front 9 totals
+                if (i <= 9) {
+                    frontPar += par;
+                    if (score !== null) { frontScore += score; frontPlayed++; }
+                }
+
+                // Back 9 totals
+                if (i >= 10) {
+                    backPar += par;
+                    if (score !== null) { backScore += score; backPlayed++; }
+                }
+
+                totalPar += par;
+                if (score !== null) { totalScore += score; holesPlayed++; }
+            }
+
+            // Helper to format +/- par relative to holes played
+            function formatVsPar(score, par, played) {
+                if (played === 0) return '—';
+                // Only count par for holes that have been played
+                let playedPar = 0;
+                let start = par === frontPar ? 1 : 10;
+                let end = start + 8;
+                for (let i = start; i <= end; i++) {
+                    const parEl = document.getElementById(`par-${i}`);
+                    const scoreEl = document.getElementById(`score-${i}`);
+                    if (parEl && scoreEl && scoreEl.value !== '') {
+                        playedPar += parseInt(parEl.value) || 0;
+                    }
+                }
+                const diff = score - playedPar;
+                return diff === 0 ? 'E' : (diff > 0 ? '+' : '') + diff;
+            }
+
+            // Front 9 totals
+            const frontParTotalEl = document.getElementById('par-total-Front 9');
+            const frontScoreTotalEl = document.getElementById('score-total-Front 9');
+            const frontResultEl = document.getElementById('result-total-Front 9');
+            if (frontParTotalEl) frontParTotalEl.textContent = frontPar;
+            if (frontScoreTotalEl) frontScoreTotalEl.textContent = frontPlayed > 0 ? frontScore : '—';
+            if (frontResultEl) frontResultEl.textContent = formatVsPar(frontScore, frontPar, frontPlayed);
+
+            // Back 9 totals
+            const backParTotalEl = document.getElementById('par-total-Back 9');
+            const backScoreTotalEl = document.getElementById('score-total-Back 9');
+            const backResultEl = document.getElementById('result-total-Back 9');
+            if (backParTotalEl) backParTotalEl.textContent = backPar;
+            if (backScoreTotalEl) backScoreTotalEl.textContent = backPlayed > 0 ? backScore : '—';
+            if (backResultEl) backResultEl.textContent = formatVsPar(backScore, backPar, backPlayed);
+
+            // Summary cards
+            document.getElementById('total-score').textContent = holesPlayed > 0 ? totalScore : '—';
+            document.getElementById('total-par').textContent = totalPar;
+            document.getElementById('holes-played').textContent = holesPlayed;
+
+            // Overall +/- par relative to holes played only
+            const vsParEl = document.getElementById('vs-par');
+            if (holesPlayed > 0) {
+                // Sum only par for holes that have scores entered
+                let playedTotalPar = 0;
+                for (let i = 1; i <= holes; i++) {
+                    const parEl = document.getElementById(`par-${i}`);
+                    const scoreEl = document.getElementById(`score-${i}`);
+                    if (parEl && scoreEl && scoreEl.value !== '') {
+                        playedTotalPar += parseInt(parEl.value) || 0;
+                    }
+                }
+                const vsPar = totalScore - playedTotalPar;
+                vsParEl.textContent = vsPar === 0 ? 'E' : (vsPar > 0 ? '+' : '') + vsPar;
+                vsParEl.className = 'value ' + (vsPar < 0 ? 'under' : vsPar > 0 ? 'over' : 'even');
+            } else {
+                vsParEl.textContent = '—';
+                vsParEl.className = 'value';
+            }
+        }
+
+        function resetCard() {
+            buildCard();
+        }
+
+        buildCard();
+    </script>
+
+</body>
+</html>
